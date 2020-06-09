@@ -234,6 +234,10 @@ scipy = "*"
 docs = ["sktda-docs-config"]
 testing = ["pytest"]
 
+[package.source]
+reference = "e777d33b7d5da37b0d653de29b06bc0ddae02011"
+type = "git"
+url = "git@github.com:szhechev/persim.git"
 [[package]]
 category = "dev"
 description = "plugin and hook calling mechanisms for python"
@@ -306,7 +310,6 @@ python-igraph = "^0.8.0"
 reference = "a5d285d94ebe3dfb2a70aded6667260e447e07a6"
 type = "git"
 url = "git@github.com:Pseudomanifold/pyper.git"
-
 [[package]]
 category = "dev"
 description = "pytest: simple powerful testing with Python"
@@ -482,7 +485,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "6daddcaa27871eefceb313dc6592a796c66505d99b0caa1f363ea719cad12292"
+content-hash = "d49c96a9c7f0b91483c740aac871c4db1337ef9ab4e2a657781d0e6b6d08fb44"
 python-versions = ">=3.6.1"
 
 [metadata.files]
@@ -664,10 +667,7 @@ pandas = [
     {file = "pandas-1.0.4-cp38-cp38-win_amd64.whl", hash = "sha256:83af85c8e539a7876d23b78433d90f6a0e8aa913e37320785cf3888c946ee874"},
     {file = "pandas-1.0.4.tar.gz", hash = "sha256:b35d625282baa7b51e82e52622c300a1ca9f786711b2af7cbe64f1e6831f4126"},
 ]
-persim = [
-    {file = "persim-0.1.2-py3-none-any.whl", hash = "sha256:f704a6dd5518eac4ef24bc068f374f2c299b54bb857b8bf2dfd3e71f63f71a55"},
-    {file = "persim-0.1.2.tar.gz", hash = "sha256:564cc46f595dde7478511b1c268dc44c219dcee28b49222f79b09eac12d1e66f"},
-]
+persim = []
 pluggy = [
     {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},
     {file = "pluggy-0.13.1.tar.gz", hash = "sha256:15b2acde666561e1298d71b523007ed7364de07029219b604cf808bfa1c765b0"},
