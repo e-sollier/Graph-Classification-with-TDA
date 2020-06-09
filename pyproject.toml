@@ -11,9 +11,12 @@ pandas = "^1.0.1"
 python-igraph = "^0.8.0"
 pyper = {git = "git@github.com:Pseudomanifold/pyper.git"}
 persim = "^0.1.2"
+tqdm = "^4.46.1"
+cairocffi = "^1.1.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^4.6"
+pylint = "^2.5.3"
 
 [build-system]
 requires = ["poetry>=0.12"]
