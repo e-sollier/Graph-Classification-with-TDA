@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def generate_img_dataset(dataset):
-    """From a graph dataset, generate a list of persistence images, and the associated graph labels"""
+def generate_img_dataset(dataset,spread=1,pixels=[10,10]):
+    """From a graph dataset, generate a list of persistence images (flattened), and the associated graph labels"""
     path = "Datasets/preprocessed/"+dataset+"/"
     y=[]
     images=[]
@@ -17,7 +17,7 @@ def generate_img_dataset(dataset):
         y.append(graph["label"])
         graph = calculate_degree_filtration(graph,attribute_out='f')
         pd_0, pd_1 = calculate_persistence_diagrams(graph,vertex_attribute='f', edge_attribute='f',order="sublevel")
-        pim = persim.PersImage(spread=1, pixels=[10,10], verbose=False)
+        pim = persim.PersImage(spread=spread, pixels=pixels, verbose=False)
         img = pim.transform(pd_0._pairs)
-        images.append(img)
+        images.append(img.flatten())
     return images,y
