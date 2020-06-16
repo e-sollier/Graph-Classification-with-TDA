@@ -24,11 +24,11 @@ def calculate_filtration(graph, method="degree",order="sublevel",attribute_out='
     as attributes `attribute_out`, respectively.
     """
     if method=="degree":
-        return calculate_degree_filtration(graph, attribute_out=attribute_out)
+        return calculate_degree_filtration(graph, order=order, attribute_out=attribute_out)
     elif method=="jaccard":
-        return calculate_jaccard_filtration(graph,attribute_out=attribute_out)
+        return calculate_jaccard_filtration(graph,order=order, attribute_out=attribute_out)
     elif method=="ricci":
-        return calculate_ricci_filtration(graph,attribute_out=attribute_out)
+        return calculate_ricci_filtration(graph, order=order, attribute_out=attribute_out)
     else:
         raise ValueError("Unrecognized filtration method. Please use degree, jaccard or ricci.")
 
@@ -55,12 +55,12 @@ def calculate_degree_filtration(
     graph = ig.Graph.copy(graph)
     graph.vs[attribute_out] = 0 #This value won't be updated for vertices with degree 0
     edge_weights = []
-
+    m = graph.maxdegree()
     for edge in graph.es:
 
         u, v = edge.source, edge.target
-        p = graph.degree(u)
-        q = graph.degree(v)
+        p = graph.degree(u)/m
+        q = graph.degree(v)/m
         graph.vs[u][attribute_out] = p
         graph.vs[v][attribute_out] = q
         if order=="sublevel":
@@ -145,7 +145,7 @@ def calculate_ricci_filtration(
     """
     graph = ig.Graph.copy(graph)
 
-    #Convert the graph to a networkx graph
+    #Convert the graph to a networkx graph (so that the GraphRicciCurvature library can be used)
     G = networkx.Graph( [(edge.source,edge.target,{'weight':1}) for edge in graph.es] )
     orc = OllivierRicci(G, alpha=0.5, verbose="INFO")
     res = orc.compute_ricci_curvature()
