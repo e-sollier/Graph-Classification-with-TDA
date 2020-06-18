@@ -1,4 +1,5 @@
 import igraph as ig
+import numpy as np
 import networkx
 from scipy.stats import wasserstein_distance
 from GraphRicciCurvature.OllivierRicci import OllivierRicci
@@ -11,7 +12,7 @@ def calculate_filtration(graph, method="degree",order="sublevel",attribute_out='
     graph:
         Input graph
     method:
-        Method to compute the filtration. Must be degree, jaccard or ricci.
+        Method to compute the filtration. Must be degree, jaccard, riccin node_betweenness or edge_betweenness.
     order:
         sublevel or superlevel
     attribute_out:
@@ -29,8 +30,12 @@ def calculate_filtration(graph, method="degree",order="sublevel",attribute_out='
         return calculate_jaccard_filtration(graph,order=order, attribute_out=attribute_out)
     elif method=="ricci":
         return calculate_ricci_filtration(graph, order=order, attribute_out=attribute_out)
+    elif method=="node_betweenness":
+        return calculate_node_betweenness_filtration(graph,order=order,attribute_out=attribute_out)
+    elif method=="edge_betweenness":
+        return calculate_edge_betweenness_filtration(graph,order=order,attribute_out=attribute_out)
     else:
-        raise ValueError("Unrecognized filtration method. Please use degree, jaccard or ricci.")
+        raise ValueError("Unrecognized filtration method. Must be one of the following: degree, jaccard, ricci, node_betweennes, or edge_betweenness.")
 
 def calculate_degree_filtration(
     graph,
@@ -158,5 +163,75 @@ def calculate_ricci_filtration(
         graph.vs[attribute_out] = min(edge_weights)
     else:
         graph.vs[attribute_out] = max(edge_weights)
+
+    return graph
+
+def calculate_node_betweenness_filtration(
+    graph,
+    attribute_out='f',
+    order="sublevel"
+):
+    """Calculate a filtration based on the betweenness centrality of nodes for 
+    a given graph.
+
+    Parameters
+    ----------
+    graph:
+        Input graph
+    attribute_out:
+        Specifies the attribute name for storing the result of the
+        calculation. This name will pertain to *both* vertices and
+        edges.
+    Returns
+    -------
+    Copy of the input graph, with vertex weights and edge weights added
+    as attributes `attribute_out`, respectively.
+    """
+    graph = ig.Graph.copy(graph)
+
+    betweenness = graph.betweenness()
+
+    if np.max(betweenness)==0:
+        graph.vs[attribute_out] = betweenness
+    else:
+        graph.vs[attribute_out] = betweenness / np.max(betweenness)
+
+    edge_weights=[]
+    for edge in graph.es:
+        b1 = graph.vs[edge.source][attribute_out]
+        b2 = graph.vs[edge.target][attribute_out]
+        edge_weights.append(max(b1,b2))
+    graph.es[attribute_out] = edge_weights
+
+    return graph
+
+def calculate_edge_betweenness_filtration(
+    graph,
+    attribute_out='f',
+    order="sublevel"
+):
+    """Calculate a filtration based on the betweenness centrality of edges for 
+    a given graph.
+
+    Parameters
+    ----------
+    graph:
+        Input graph
+    attribute_out:
+        Specifies the attribute name for storing the result of the
+        calculation. This name will pertain to *both* vertices and
+        edges.
+    Returns
+    -------
+    Copy of the input graph, with vertex weights and edge weights added
+    as attributes `attribute_out`, respectively.
+    """
+    graph = ig.Graph.copy(graph)
+    edge_betweenness = graph.edge_betweenness()
+    if np.max(edge_betweenness)==0:
+        graph.es[attribute_out] = edge_betweenness
+    else:
+        graph.es[attribute_out] = edge_betweenness / np.max(edge_betweenness)
+    graph.vs[attribute_out] = 0
 
     return graph
