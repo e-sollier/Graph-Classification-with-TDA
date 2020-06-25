@@ -15,8 +15,8 @@ def generate_img_dataset(dataset_path,filtration="degree",extended=False,dimensi
 
     Parameters
     ----------
-    dataset:
-        Name of the folder corresponding to a dataset. Ex: MUTAG
+    dataset_path:
+       Path to the folder corresponding to a dataset. (Ex: Datasets/preprocessed/MUTAG)
     filtration:
         Method to compute the filtration. Must be degree, jaccard or ricci.
     extended:
@@ -39,13 +39,11 @@ def generate_img_dataset(dataset_path,filtration="degree",extended=False,dimensi
         list of labels (used for classification)
     """
 
-    path = "Datasets/preprocessed/"+dataset+"/"
-
     # Load the graphs and compute the filtration
     graphs=[]
     y=[]
     for f in sorted(os.listdir(dataset_path)):
-        graph = ig.Graph.Read_Picklez(os.path.join(path,f))
+        graph = ig.Graph.Read_Picklez(os.path.join(dataset_path,f))
         graph = calculate_filtration(graph,method=filtration,attribute_out="f")
         graphs.append(graph)
         y.append(graph["label"])
@@ -84,6 +82,8 @@ def generate_img_dataset(dataset_path,filtration="degree",extended=False,dimensi
     for dgs in persistence_diagrams:
         pim = persim.PersImage(spread=spread, pixels=pixels, verbose=False,weighting_type=weighting_type)
         images.append(pim.transform(dgs))
+
+    # Flatten and concatenate all persistence images
     flattened_images = [np.concatenate([images[ind][i].flatten() for ind in range(len(persistence_diagrams))]) for i in range(len(images[0]))]
     
     return flattened_images,y

@@ -5,14 +5,18 @@ description = ""
 authors = ["Etienne Sollier"]
 
 [tool.poetry.dependencies]
-python = ">=3.6.1"
+python = ">=3.8"
 pandas = "^1.0.1"
 numpy = "^1.18.1"
 python-igraph = "^0.8.0"
 pyper = {git = "git@github.com:Pseudomanifold/pyper.git"}
-persim= {git = "git@github.com:szhechev/persim.git", branch = "float64_error_fix"}
+persim = {git = "git@github.com:e-sollier/persim.git"}
 tqdm = "^4.46.1"
 cairocffi = "^1.1.0"
+cvxpy = "1.0.27"
+graphriccicurvature = "^0.4.5"
+jupyter = "^1.0.0"
+gudhi = "^3.2.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^4.6"

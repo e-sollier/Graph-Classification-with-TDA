@@ -1,3 +1,4 @@
+import os, sys,inspect
 import numpy as np
 from sklearn.model_selection import GridSearchCV, cross_val_score, StratifiedKFold
 from sklearn.ensemble import RandomForestClassifier
@@ -5,12 +6,18 @@ from sklearn.pipeline import Pipeline
 from sklearn.svm import LinearSVC, SVC
 from sklearn.feature_selection import SelectFromModel
 
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0,parentdir) 
 from GCTDA.images import generate_img_dataset
 from GCTDA.baseline import count_nodes, histogram_degrees, laplacian_spectrum, heat_kernel_trace
 
 
 np.random.seed(41)
-X,y = generate_img_dataset(dataset="MUTAG",filtration="node_betweenness",extended=True,spread = 0.1, pixels=[7,7],dimensions=[0,1],weighting_type="uniform")
+dataset_path = "tests/Datasets/preprocessed/MUTAG"
+
+X,y = generate_img_dataset(dataset_path=dataset_path,filtration="node_betweenness",extended=True,
+                        spread = 0.1, pixels=[7,7],dimensions=[0,1],weighting_type="uniform")
 #X,y = laplacian_spectrum("NCI1")
 y = np.array(y)
 #images2,y2 = generate_img_dataset(dataset="REDDIT-MULTI-5K",filtration="node_betweenness",extended=False,spread = 0.15, pixels=[7,7],dimensions=[0,1])
