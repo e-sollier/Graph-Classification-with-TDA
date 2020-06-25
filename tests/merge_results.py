@@ -1,7 +1,13 @@
+# Usage: python merge_results.py results_dir -o results.csv
+# This script collects results in the directory results_dir
+# (where each file contains the accuracy for one dataset with one method)
+# and assembles them into one csv file.
+
+
 import os
 import argparse
+import numpy as np
 import pandas as pd
-
 
 
 if __name__== "__main__":
@@ -11,6 +17,7 @@ if __name__== "__main__":
     args = parser.parse_args()
 
     results = {}
+    # Each file contains the accuracy of one method on one dataset
     for f in sorted(os.listdir(args.path)):
         desc = f[:-4] #remove .txt
         desc = desc.split("_")
@@ -23,4 +30,15 @@ if __name__== "__main__":
     
     df = pd.DataFrame(results)
     df.index.rename("Method",inplace=True)
+
+    #Compute average accuracy for each method
+    averages = []
+    for method in df.index:
+        values = []
+        for dataset in df.columns:
+            accuracy = str(df.loc[method,dataset]).split("\u00B1")[0]
+            values.append(float(accuracy))
+        averages.append(np.mean(values))
+    df["Average"] = averages
+
     df.to_csv(args.output)

@@ -1,11 +1,10 @@
 import gudhi as gd
 import igraph as ig
-import os
-from filtrations import calculate_filtration
-from pyper.persistent_homology import calculate_persistence_diagrams
-
 
 def compute_extended_persistence_diagrams(graph,attribute):
+    """
+    Compute the 4 extended persistence diagrams for a graph, using Gudhi.
+    """
     st = gd.SimplexTree()
     for u in graph.vs:
         st.insert([u.index],filtration = u[attribute])
