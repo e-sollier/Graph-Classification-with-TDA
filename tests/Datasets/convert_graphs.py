@@ -75,6 +75,7 @@ def convert_graphs(inputDir,outputDir):
     vertex_count=0 #Number of vertices that have been parsed
     offset=1 # ID of the first vertex in the current graph
     edges=[]
+    edges_set = set() #used to avoid inserting the same edge twice
     reached_end = False
 
     #Parse vertices one by one
@@ -102,22 +103,24 @@ def convert_graphs(inputDir,outputDir):
                     if have_edge_attributes:
                         attr = next(edge_attributes_file).split(",")
                         edge_attribute = np.array([float(a) for a in attr])
-                    #The graphs are undirected, so we include each edge only once.
-                    #This is achieved here by keeping only edges where the source is smaller than the target
-                    if edge[0]>edge[1]:
+                    # The graphs are undirected, so we include each edge only once.
+                    # This is achieved here by keeping only edges where the source is smaller than the target
+                    # Also make sure that each edge is inserted only once 
+                    if edge[0]>edge[1] or (edge[0]-offset,edge[1]-offset) in edges_set:
                         continue
                     if edge[0]<vertex_count and edge[1]<vertex_count:
-                        #If the edge is part of the current graph, we add it and keep looking for edges
+                        # If the edge is part of the current graph, we add it and keep looking for edges
                         edges.append((edge[0]-offset,edge[1]-offset)) #Make vertex IDs start at 0 in each graph
+                        edges_set.add((edge[0]-offset,edge[1]-offset))
                         if have_edge_labels:
                             edge_labels.append(edge_label)
                         if have_edge_attributes:
                             edge_attributes.append(edge_attribute)
                     else:
-                        #If the edge belongs to the next graph, we can build the current graph with all the edges that were found
+                        # If the edge belongs to the next graph, we can build the current graph with all the edges that were found
                         found_all_edges = True
                     
-            
+            # Once all edges have been found, the graph can be built
             G = ig.Graph(edges)
             G["label"] = int(next(graph_label_file))
             if have_node_labels:
@@ -140,6 +143,7 @@ def convert_graphs(inputDir,outputDir):
             current_graph_id+=1
             if edge!="":
                 edges = [(edge[0]-offset,edge[1]-offset)]
+                edges_set = {(edge[0]-offset,edge[1]-offset)}
 
         if have_node_labels and not reached_end:
             node_labels.append(float(next(node_labels_file)))
