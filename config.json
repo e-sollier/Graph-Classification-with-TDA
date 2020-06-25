@@ -1,7 +1,0 @@
-{
-	"inputDir": "Datasets/preprocessed",
-	"datasets": ["MUTAG","PROTEINS","NCI1","NCI109","DD","BZR",
-		"COLLAB","IMDB-BINARY","IMDB-MULTI","REDDIT-BINARY","REDDIT-MULTI-5K,REDDIT-MULTI-12K"],
-	"filtrations":["degree","jaccard"],
-	"dimensions": [[0],[0,1]]
-}
