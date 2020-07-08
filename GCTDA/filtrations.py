@@ -5,7 +5,7 @@ from scipy.linalg import eigh
 from sklearn.preprocessing import QuantileTransformer
 from GraphRicciCurvature.OllivierRicci import OllivierRicci
 
-def calculate_filtration(graph, method="degree",attribute_out='f'):
+def calculate_filtration(graph, method="degree", useNodeWeight=True, attribute_out='f'):
     """Calculate a filtration for the graph, using the specified method.
 
     Parameters
@@ -14,6 +14,9 @@ def calculate_filtration(graph, method="degree",attribute_out='f'):
         Input graph
     method:
         Method to compute the filtration. Must be degree, jaccard, ricci, node_betweenness, edge_betweenness or hks.
+    useNodeWeight:
+        For filtrations based on edges (jaccard, ricci, edgeBetweenness), if True, will set the weight of each node to 
+        the minimum weight of its edges. Otherwise, the weight of each node is set to 0.
     attribute_out:
         Specifies the attribute name for storing the result of the
         calculation. This name will pertain to *both* vertices and
@@ -26,17 +29,17 @@ def calculate_filtration(graph, method="degree",attribute_out='f'):
     if method=="degree":
         return calculate_degree_filtration(graph, attribute_out=attribute_out)
     elif method=="jaccard":
-        return calculate_jaccard_filtration(graph,attribute_out=attribute_out)
+        return calculate_jaccard_filtration(graph,attribute_out=attribute_out,useNodeWeight=useNodeWeight)
     elif method=="ricci":
-        return calculate_ricci_filtration(graph,attribute_out=attribute_out)
-    elif method=="node_betweenness":
-        return calculate_node_betweenness_filtration(graph,attribute_out=attribute_out,cutoff=10)
-    elif method=="edge_betweenness":
-        return calculate_edge_betweenness_filtration(graph,attribute_out=attribute_out,cutoff=10)
+        return calculate_ricci_filtration(graph,attribute_out=attribute_out,useNodeWeight=useNodeWeight)
+    elif method=="nodeBetweenness":
+        return calculate_nodeBetweenness_filtration(graph,attribute_out=attribute_out,cutoff=10)
+    elif method=="edgeBetweenness":
+        return calculate_edgeBetweenness_filtration(graph,attribute_out=attribute_out,cutoff=10,useNodeWeight=useNodeWeight)
     elif method=="hks":
         return calculate_hks_filtration(graph,time=10,attribute_out=attribute_out)
     else:
-        raise ValueError("Unrecognized filtration method. Must be one of the following: degree, jaccard, ricci, node_betweennes, edge_betweenness, or hks.")
+        raise ValueError("Unrecognized filtration method. Must be one of the following: degree, jaccard, ricci, nodeBetweenness, edgeBetweenness, or hks.")
 
 def scale_filtration_linear(graphs,attribute="f"):
     """
@@ -135,6 +138,7 @@ def calculate_degree_filtration(
 
 def calculate_jaccard_filtration(
     graph,
+    useNodeWeight=True,
     attribute_out='f',
 ):
     """Calculate a jaccard index-based filtration for a given graph.
@@ -164,15 +168,16 @@ def calculate_jaccard_filtration(
 
     #Compute the Jaccard index of each edge
     edge_weights = []
-    node_weights = [1] * len(graph.vs)
+    node_weights = [1] * len(graph.vs) if useNodeWeight else [0] * len(graph.vs)
     for edge in graph.es:
         u, v = edge.source, edge.target
         inter = len(neighbours[u].intersection(neighbours[v]))
         union = len(neighbours[u].union(neighbours[v]))
         weight = 1- inter/union
         edge_weights.append(weight)
-        node_weights[u] = min(node_weights[u],weight)
-        node_weights[v] = min(node_weights[v],weight)
+        if useNodeWeight:
+            node_weights[u] = min(node_weights[u],weight)
+            node_weights[v] = min(node_weights[v],weight)
     graph.es[attribute_out] = edge_weights
     graph.vs[attribute_out] = node_weights
     return graph
@@ -180,6 +185,7 @@ def calculate_jaccard_filtration(
 
 def calculate_ricci_filtration(
     graph,
+    useNodeWeight=True,
     attribute_out='f',
     alpha=0.5,
 ):
@@ -217,11 +223,14 @@ def calculate_ricci_filtration(
         node_weights[u] = min(node_weights[u],orc.G[u][v]["ricciCurvature"])
         node_weights[v] = min(node_weights[v],orc.G[u][v]["ricciCurvature"])
     graph.es[attribute_out] = edge_weights
-    graph.vs[attribute_out] = node_weights
+    if useNodeWeight:
+        graph.vs[attribute_out] = node_weights
+    else:
+        graph.vs[attribute_out] = np.min(edge_weights)
 
     return graph
 
-def calculate_node_betweenness_filtration(
+def calculate_nodeBetweenness_filtration(
     graph,
     attribute_out='f',
     cutoff=None
@@ -258,8 +267,9 @@ def calculate_node_betweenness_filtration(
 
     return graph
 
-def calculate_edge_betweenness_filtration(
+def calculate_edgeBetweenness_filtration(
     graph,
+    useNodeWeight=True,
     attribute_out='f',
     cutoff=None
 ):
@@ -290,8 +300,10 @@ def calculate_edge_betweenness_filtration(
         v = edge.target
         node_weights[u] = min(node_weights[u] , edge[attribute_out]) 
         node_weights[v] = min(node_weights[v] , edge[attribute_out]) 
-
-    graph.vs[attribute_out] = node_weights
+    if useNodeWeight:
+        graph.vs[attribute_out] = node_weights
+    else:
+        graph.vs[attribute_out] = 0
     return graph
 
 
@@ -330,3 +342,33 @@ def calculate_hks_filtration(
     graph.es[attribute_out] = edge_weights
 
     return graph
+
+def add_random_noise(graphs,attribute="f"):
+    """
+    Add small random noise to the filtration values. This is to ensure that
+    all vertices will results in a tuple in the persistence diagram.
+    
+    Parameters
+    ----------
+    graphs:
+        A list of graphs
+    attribute:
+        Attribute where the value for the filtration is stored
+    """
+    modified_graphs=[]
+    for graph in graphs:
+        graph = ig.Graph.copy(graph)
+        # Add random noise
+        node_values = graph.vs[attribute]
+        noise = np.random.rand(len(node_values)) /1000
+        graph.vs[attribute] = [node_values[i] + noise[i] for i in range(len(node_values))]
+        
+        # Adjust edge weights accordingly
+        edge_weights = []
+        for edge in graph.es:
+            a = graph.vs[edge.source][attribute]
+            b = graph.vs[edge.target][attribute]
+            edge_weights.append(max(a,b))
+        graph.es[attribute] = edge_weights
+        modified_graphs.append(graph)
+    return modified_graphs
