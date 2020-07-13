@@ -75,6 +75,7 @@ def generate_density_features(graphs,method,res=10,spread=0.2):
                             integral = kernel.integrate_box(low_bounds = [i/res,j/res], high_bounds =[(i+1)/res,(j+1)/res]) * values2D.shape[1]
                             density.append(integral)
                     densities.append(density)
+            densities = np.nan_to_num(densities,copy=False,nan=0.0)
             densities_list.append(densities)
     
     features_list = [np.concatenate([densities_list[dens_index][i] for dens_index in range(len(densities_list))]) for i in range(len(graphs))]
@@ -93,9 +94,10 @@ def calculate_values_graphs(graphs,method):
         for graph in graphs:
             graph = calculate_filtration(graph,method=method,attribute_out="f")
             values_list.append(graph.es["f"])
-    elif method=="degreeNeighbors":
+    elif method[:4]=="min." or method[:4]=="max." or method[:4]=="sum." or method[:5]=="mean.":
+        aggregation,function = method.split(".")
         for graph in graphs:
-            values= calculate_degreeNeighbors(graph,method="mean")
+            values= calculate_value_neighbors(graph,function,aggregation)
             values_list.append(values)
     elif method[:6]=="birth.":
         values_list = calculate_persistence(graphs,filtration=method[6:],dim=0,ind=0)
@@ -134,22 +136,25 @@ def scale_quantile(values_list):
               scaled_values_list.append([])
     return scaled_values_list
 
-def calculate_degreeNeighbors(graph,method="mean"):
-    values = []
+def calculate_value_neighbors(graph,function="degree",aggregation="mean"):
+    results = []
+    graph = calculate_filtration(graph,method=function,attribute_out="f")
     for u in graph.vs:
-        degrees=[]
+        values_neighbors=[]
         if len(u.neighbors())==0:
-            values.append(0)
+            results.append(0)
         else:
             for v in u.neighbors():
-                degrees.append(v.degree())
-            if method=="mean":
-                values.append(np.mean(degrees))
-            elif method=="max":
-                values.append(np.max(degrees))
-            elif method=="min":
-                values.append(np.min(degrees))
-    return values
+                values_neighbors.append(v["f"])
+            if aggregation=="mean":
+               results.append(np.mean(values_neighbors))
+            elif aggregation=="max":
+                results.append(np.max(values_neighbors))
+            elif aggregation=="min":
+                results.append(np.min(values_neighbors))
+            elif aggregation=="sum":
+                results.append(np.sum(values_neighbors))
+    return results
 
 def calculate_persistence(graphs,filtration="edgeBetweenness",dim=0,ind=None):
     """
@@ -178,8 +183,8 @@ def same_values(values2D):
     max_diff0=0
     max_diff1=0
     for i in range(values2D.shape[1]):
-        diff0 = (values2D[0,0] - values2D[0,i])**2
-        diff1 = (values2D[1,0] - values2D[1,i])**2
+        diff0 = abs(values2D[0,0] - values2D[0,i])
+        diff1 = abs(values2D[1,0] - values2D[1,i])
         max_diff0 = max(max_diff0,diff0)
         max_diff1 = max(max_diff1,diff1)
     return max_diff0<0.05 or max_diff1<0.05

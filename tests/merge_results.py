@@ -21,8 +21,7 @@ if __name__== "__main__":
     results = {}
     # Each file contains the accuracy of one method on one dataset
     for f in sorted(os.listdir(args.path)):
-        desc = f[:-4] #remove .txt
-        desc = desc.split("_")
+        desc = f.split("_")
         dataset = desc[0]
         method = "_".join(desc[1:])
         if not dataset in results:
